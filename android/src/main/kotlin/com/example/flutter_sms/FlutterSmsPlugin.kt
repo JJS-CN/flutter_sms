@@ -18,7 +18,6 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
-import io.flutter.plugin.common.PluginRegistry.Registrar
 
 
 class FlutterSmsPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
@@ -59,34 +58,23 @@ class FlutterSmsPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
     mChannel.setMethodCallHandler(null)
   }
 
-  // V1 embedding entry point. This is deprecated and will be removed in a future Flutter
-  // release but we leave it here in case someone's app does not utilize the V2 embedding yet.
-  companion object {
-    @JvmStatic
-    fun registerWith(registrar: Registrar) {
-      val inst = FlutterSmsPlugin()
-      inst.activity = registrar.activity()
-      inst.setupCallbackChannels(registrar.messenger())
-    }
-  }
-
   override fun onMethodCall(call: MethodCall, result: Result) {
     when (call.method) {
-        "sendSMS" -> {
-          if (!canSendSMS()) {
-            result.error(
-                    "device_not_capable",
-                    "The current device is not capable of sending text messages.",
-                    "A device may be unable to send messages if it does not support messaging or if it is not currently configured to send messages. This only applies to the ability to send text messages via iMessage, SMS, and MMS.")
-            return
-          }
-          val message = call.argument<String?>("message") ?: ""
-          val recipients = call.argument<String?>("recipients") ?: ""
-          val sendDirect = call.argument<Boolean?>("sendDirect") ?: false
-          sendSMS(result, recipients, message!!, sendDirect)
+      "sendSMS" -> {
+        if (!canSendSMS()) {
+          result.error(
+            "device_not_capable",
+            "The current device is not capable of sending text messages.",
+            "A device may be unable to send messages if it does not support messaging or if it is not currently configured to send messages. This only applies to the ability to send text messages via iMessage, SMS, and MMS.")
+          return
         }
-        "canSendSMS" -> result.success(canSendSMS())
-        else -> result.notImplemented()
+        val message = call.argument<String?>("message") ?: ""
+        val recipients = call.argument<String?>("recipients") ?: ""
+        val sendDirect = call.argument<Boolean?>("sendDirect") ?: false
+        sendSMS(result, recipients, message!!, sendDirect)
+      }
+      "canSendSMS" -> result.success(canSendSMS())
+      else -> result.notImplemented()
     }
   }
 
